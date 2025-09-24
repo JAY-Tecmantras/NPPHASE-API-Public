@@ -11,6 +11,7 @@ namespace NPPHASE.Apis.Controllers
 
     public class HomeController : ControllerBase
     {
+        private readonly IActionResult _result;
 
         private readonly IHomeService _deviceService;
         private readonly IExceptionLoggerServices _exceptionLoggerServices;
@@ -56,6 +57,6 @@ namespace NPPHASE.Apis.Controllers
             return Ok("s");
         }
 
-        
+
     }
 }
