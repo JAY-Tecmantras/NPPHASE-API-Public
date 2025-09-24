@@ -1,48 +1,61 @@
-name: PR Full & New Code SonarCloud Scan
+name: SonarCloud
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
-    branches: [ "master" ]   # PR base branch
     types: [opened, synchronize, reopened]
+    branches:
+      - master
 
 jobs:
-  sonar-pr-full-scan:
-    runs-on: windows-latest
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout full repo history (important for full scan)
+      # 1️⃣ कोड checkout
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # full history for PR diff & full scan
+          fetch-depth: 0   # shallow clone नहीं ताकि analysis ठीक से हो
 
-      # 2️⃣ Setup .NET
+      # 2️⃣ .NET SDK सेटअप
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'  # apke project version
+          dotnet-version: '9.0.x'  # अपने प्रोजेक्ट का वर्ज़न डालें, जैसे 8.0.x
 
-      # 4️⃣ Install SonarScanner for .NET
-      - name: Install SonarScanner
-        run: dotnet tool install --global dotnet-sonarscanner
+      # 3️⃣ SonarCloud cache
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-      - name: SonarCloud Begin
-        run: dotnet sonarscanner begin /k:"JAY-Tecmantras_NPPHASE-API-Public" /o:"jay-tecmantras" /d:sonar.token=%SONAR_TOKEN% /d:sonar.pullrequest.key=%PR_NUMBER% /d:sonar.pullrequest.branch=%PR_BRANCH% /d:sonar.pullrequest.base=%PR_BASE% /d:sonar.analysis.mode=publish /d:sonar.cs.analyzer.projectOutPaths="**"
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_BRANCH: ${{ github.head_ref }}
-          PR_BASE: ${{ github.base_ref }}
+      # 4️⃣ Dependencies restore
+      - name: Install Dependencies
+        run: dotnet restore
 
-
-      # 6️⃣ Build solution
+      # 5️⃣ Build
       - name: Build Solution
-        run: dotnet build --no-restore
+        run: dotnet build --no-incremental
 
-      # 7️⃣ Run Tests with Coverage (optional)
-      - name: Run Tests
+      # 6️⃣ Tests + Coverage (optional but recommended)
+      - name: Run Tests with Coverage
         run: dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
 
-      # 8️⃣ SonarCloud End
-      - name: SonarCloud End
-        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+      # 7️⃣ SonarCloud analysis + Quality Gate
+      - name: SonarCloud Scan + Quality Gate
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.projectKey=JAY-Tecmantras_NPPHASE-API-Private
+            -Dsonar.organization=jay-tecmantras
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.cs.opencover.reportsPaths=**/TestResults/*/coverage.cobertura.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
