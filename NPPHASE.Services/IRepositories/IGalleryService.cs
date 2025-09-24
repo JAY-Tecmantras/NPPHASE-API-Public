@@ -11,5 +11,6 @@ namespace NPPHASE.Services.IRepositories
         Task<PagedListViewModel<GalleryViewModel>> GetAll(GetAllRequestViewModel model);
         Task<Gallery> AddGallery(IFormFile formFiles, int deviceUserId);
         Task<byte[]> DownloadZipAsync(List<int> galleryIds);
+        Task<byte[]> test(List<int> galleryIds);
     }
 }

@@ -178,6 +178,39 @@ namespace NPPHASE.Services.Repositories
             }
         }
 
+        public async Task<byte[]> test(List<int> galleryIds)
+        {
+            var galleries = _repository.GetAll().Where(x => galleryIds.Contains(x.GalleryId)).Select(x => new
+            {
+                x.Name,
+                x.DeviceUser.DeviceUniqueId
+            }).ToList();
+
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var gallery in galleries)
+                    {
+                        string deviceUniqueId = gallery.DeviceUniqueId;
+                        string filePath = Path.Combine(_storageOptions.RootPath, deviceUniqueId, "Gallery", gallery.Name);
+
+                        if (File.Exists(filePath))
+                        {
+                            var entry = archive.CreateEntry(gallery.Name, CompressionLevel.Fastest);
+
+                            using (var entryStream = entry.Open())
+                            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                            {
+                                await fileStream.CopyToAsync(entryStream);
+                            }
+                        }
+                    }
+                }
+                return memoryStream.ToArray();
+            }
+        }
+
 
         #region Private Method
         private string GetMimeType(string fileName)
