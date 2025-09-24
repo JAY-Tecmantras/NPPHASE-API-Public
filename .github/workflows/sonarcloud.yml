@@ -22,12 +22,6 @@ jobs:
         with:
           dotnet-version: '9.0.x'  # apke project version
 
-      # 3️⃣ Setup Java (required for SonarScanner)
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-
       # 4️⃣ Install SonarScanner for .NET
       - name: Install SonarScanner
         run: dotnet tool install --global dotnet-sonarscanner
