@@ -26,18 +26,14 @@ jobs:
       - name: Install SonarScanner
         run: dotnet tool install --global dotnet-sonarscanner
 
-      # 5️⃣ SonarCloud Begin (PR + Full Repo Scan)
       - name: SonarCloud Begin
-        run: |
-          dotnet sonarscanner begin \
-            /k:"JAY-Tecmantras_NPPHASE-API-Public" \
-            /o:"jay-tecmantras" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.pullrequest.key=${{ github.event.pull_request.number }} \
-            /d:sonar.pullrequest.branch=${{ github.head_ref }} \
-            /d:sonar.pullrequest.base=${{ github.base_ref }} \
-            /d:sonar.analysis.mode=publish \
-            /d:sonar.cs.analyzer.projectOutPaths="**"   # ensures full repo analysis
+        run: dotnet sonarscanner begin /k:"JAY-Tecmantras_NPPHASE-API-Public" /o:"jay-tecmantras" /d:sonar.token=%SONAR_TOKEN% /d:sonar.pullrequest.key=%PR_NUMBER% /d:sonar.pullrequest.branch=%PR_BRANCH% /d:sonar.pullrequest.base=%PR_BASE% /d:sonar.analysis.mode=publish /d:sonar.cs.analyzer.projectOutPaths="**"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.head_ref }}
+          PR_BASE: ${{ github.base_ref }}
+
 
       # 6️⃣ Build solution
       - name: Build Solution
