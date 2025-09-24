@@ -49,10 +49,10 @@ jobs:
 
       # 7️⃣ SonarCloud analysis + Quality Gate
       - name: SonarCloud Scan + Quality Gate
-        uses: SonarSource/sonarcloud-github-action
+        uses: SonarSource/sonarcloud-github-action@master
         with:
           args: >
-            -Dsonar.projectKey=JAY-Tecmantras_NPPHASE-API-Public
+            -Dsonar.projectKey=JAY-Tecmantras_NPPHASE-API-Private
             -Dsonar.organization=jay-tecmantras
             -Dsonar.qualitygate.wait=true
             -Dsonar.cs.opencover.reportsPaths=**/TestResults/*/coverage.cobertura.xml
