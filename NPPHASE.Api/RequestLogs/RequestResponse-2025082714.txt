@@ -1,0 +1,1 @@
+2025-08-27 14:00:01.689 +05:30 [INF] Response: {"StatusCode":400,"Headers":[{"Key":"Content-Type","Value":["application/json; charset=utf-8"],"$type":"KeyValuePair`2"}],"Body":"{\"message\":\"No data available to generate PDF\"}"}
