@@ -13,11 +13,43 @@ namespace NPPHASE.Apis.Controllers
     {
         private readonly IActionResult _result;
 
+        private readonly IHomeService _deviceService;
+        private readonly IExceptionLoggerServices _exceptionLoggerServices;
         public HomeController(IHomeService deviceService, IExceptionLoggerServices exceptionLoggerServices)
         {
-            
+            _deviceService = deviceService;
+            _exceptionLoggerServices = exceptionLoggerServices;
         }
-        
+        [HttpGet("GetAllDeviceUser")]
+        [Authorize]
+        public async Task<IActionResult> GetAllDeviceUser()
+        {
+            try
+            {
+                return new OkObjectResult(new ResponseMessageViewModel()
+                {
+                    Data = await _deviceService.GetAllDeviceUser(),
+                    IsSuccess = true
+                });
+            }
+            catch (Exception ex)
+            {
+                var exception = new Exceptions
+                {
+                    Message = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    Timestamp = DateTimeOffset.UtcNow,
+                    ScreenName = "Home/GetAllDeviceUser",
+                };
+                _exceptionLoggerServices.InsertErrorLog(exception);
+                return new OkObjectResult(new ResponseMessageViewModel
+                {
+                    Message = "Error occured while getting details",
+                    IsSuccess = false
+                });
+
+            }
+        }
 
         [HttpGet("Test")]
         public IActionResult Test()
@@ -25,10 +57,6 @@ namespace NPPHASE.Apis.Controllers
             return Ok("s");
         }
 
-        [HttpGet("Test2")]
-        public IActionResult test2()
-        {
-            return Ok("s");
-        }
+
     }
 }
