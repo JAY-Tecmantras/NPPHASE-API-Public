@@ -13,35 +13,42 @@ jobs:
     runs-on: windows-latest
     steps:
       # 1️⃣ Checkout code
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       # 2️⃣ Setup .NET SDK
-      - uses: actions/setup-dotnet@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
       # 3️⃣ SonarCloud cache
-      - uses: actions/cache@v4
+      - name: Cache SonarCloud
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
       # 4️⃣ Restore dependencies
-      - run: dotnet restore
+      - name: Restore Dependencies
+        run: dotnet restore
+        shell: cmd
 
       # 5️⃣ Build solution
-      - run: dotnet build --configuration Release
+      - name: Build Solution
+        run: dotnet build --configuration Release
+        shell: cmd
 
       # 6️⃣ Create folder for coverage report
       - name: Create Coverage Folder
         run: if not exist TestResults\CoverageReport mkdir TestResults\CoverageReport
-
-      # 7️⃣ Run tests with Coverlet (CMD shell)
-      - name: Run Tests with Coverage
         shell: cmd
+
+      # 7️⃣ Run tests with Coverlet coverage (CMD shell)
+      - name: Run Tests with Coverage
         run: |
           dotnet tool install --global coverlet.console
           set PATH=%PATH%;%USERPROFILE%\.dotnet\tools
@@ -49,12 +56,16 @@ jobs:
             /p:CollectCoverage=true ^
             /p:CoverletOutputFormat=cobertura ^
             /p:CoverletOutput=TestResults\CoverageReport\coverage.xml
+        shell: cmd
 
       # 8️⃣ Verify coverage file exists
-      - run: dir /s TestResults
+      - name: Verify Coverage File
+        run: dir /s TestResults
+        shell: cmd
 
       # 9️⃣ SonarCloud analysis
-      - uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8
+      - name: SonarCloud Scan + Quality Gate
+        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8
         with:
           args: >
             -Dsonar.projectKey=JAY-Tecmantras_NPPHASE-API-Public
@@ -66,3 +77,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: cmd
