@@ -5,57 +5,61 @@ on:
     branches:
       - master
   pull_request:
-    types: [opened, synchronize, reopened]
     branches:
       - master
 
 jobs:
   sonarcloud:
-    name: SonarCloud Analysis
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ कोड checkout
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      # 1️⃣ Checkout code
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # shallow clone नहीं ताकि analysis ठीक से हो
+          fetch-depth: 0
 
-      # 2️⃣ .NET SDK सेटअप
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      # 2️⃣ Setup .NET SDK
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'  # अपने प्रोजेक्ट का वर्ज़न डालें, जैसे 8.0.x
+          dotnet-version: '9.0.x'
 
       # 3️⃣ SonarCloud cache
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # 4️⃣ Dependencies restore
-      - name: Install Dependencies
-        run: dotnet restore
+      # 4️⃣ Restore dependencies
+      - run: dotnet restore
 
-      # 5️⃣ Build
-      - name: Build Solution
-        run: dotnet build --no-incremental
+      # 5️⃣ Build solution
+      - run: dotnet build --configuration Release
 
-      # 6️⃣ Tests + Coverage (optional but recommended)
+      # 6️⃣ Create folder for coverage report
+      - name: Create Coverage Folder
+        run: mkdir -p TestResults/CoverageReport
+
+      # 7️⃣ Run tests with Coverlet coverage
       - name: Run Tests with Coverage
-        run: dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+        run: |
+          dotnet tool install --global coverlet.console
+          export PATH="$PATH:/home/runner/.dotnet/tools"
+          dotnet test --no-build --configuration Release \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=cobertura \
+            /p:CoverletOutput=TestResults/CoverageReport/coverage.xml
 
-      # 7️⃣ SonarCloud analysis + Quality Gate
-      - name: SonarCloud Scan + Quality Gate
-        uses: SonarSource/sonarcloud-github-action@master
+      # 8️⃣ Verify coverage file exists
+      - run: ls -R TestResults
+
+      # 9️⃣ SonarCloud analysis
+      - uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8
         with:
           args: >
             -Dsonar.projectKey=JAY-Tecmantras_NPPHASE-API-Public
             -Dsonar.organization=jay-tecmantras
             -Dsonar.qualitygate.wait=true
-            -Dsonar.cs.opencover.reportsPaths=**/TestResults/*/coverage.cobertura.xml
+            -Dsonar.cs.opencover.reportsPaths=TestResults/CoverageReport/coverage.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
