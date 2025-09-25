@@ -11,14 +11,14 @@ namespace NPPHASE.Apis.Controllers
     [Route("api/[controller]")]
     [ApiController]
 
-    public class GalleryCopyController : BaseController<Gallery>
+    public class GalleryCopyPController : BaseController<Gallery>
     {
         private readonly IService<Gallery> _service;
         private readonly IActionResult _result;
         private readonly ILogger _logger;
         private readonly IGalleryService _galleryService;
 
-        public GalleryCopyController(IService<Gallery> service, IGalleryService galleryService, IDeviceUserServices deviceUserServices) : base(service, deviceUserServices)
+        public GalleryCopyPController(IService<Gallery> service, IGalleryService galleryService, IDeviceUserServices deviceUserServices) : base(service, deviceUserServices)
         {
             _service = service;
             _galleryService = galleryService;
