@@ -38,7 +38,7 @@ jobs:
       - name: Run Tests with Coverage
         run: |
           dotnet tool install --global coverlet.console
-          set PATH=%PATH%;%USERPROFILE%\.dotnet\tools
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
           dotnet test --no-build --configuration Release ^
             /p:CollectCoverage=true ^
             /p:CoverletOutputFormat=cobertura ^
