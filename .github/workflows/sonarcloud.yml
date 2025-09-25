@@ -35,7 +35,11 @@ jobs:
       # 5️⃣ Build solution
       - run: dotnet build --configuration Release
 
-      # 6️⃣ Run tests with Coverlet coverage
+      # 6️⃣ Create folder for coverage report
+      - name: Create Coverage Folder
+        run: mkdir -p TestResults/CoverageReport
+
+      # 7️⃣ Run tests with Coverlet coverage
       - name: Run Tests with Coverage
         run: |
           dotnet tool install --global coverlet.console
@@ -45,10 +49,10 @@ jobs:
             /p:CoverletOutputFormat=cobertura \
             /p:CoverletOutput=TestResults/CoverageReport/coverage.xml
 
-      # 7️⃣ Verify coverage file exists
+      # 8️⃣ Verify coverage file exists
       - run: ls -R TestResults
 
-      # 8️⃣ SonarCloud analysis
+      # 9️⃣ SonarCloud analysis
       - uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8
         with:
           args: >
