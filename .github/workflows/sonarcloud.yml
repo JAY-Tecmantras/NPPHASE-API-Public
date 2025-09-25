@@ -12,40 +12,43 @@ jobs:
   sonarcloud:
     runs-on: ubuntu-latest
     steps:
+      # 1️⃣ Checkout code
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # 2️⃣ Setup .NET SDK
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
+      # 3️⃣ SonarCloud cache
       - uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+      # 4️⃣ Restore dependencies
       - run: dotnet restore
 
+      # 5️⃣ Build solution
       - run: dotnet build --configuration Release
 
-      # Run tests and collect coverage
-      - run: dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory TestResults
-
-      # Install ReportGenerator to convert coverage to Cobertura
-      - run: |
-          dotnet tool install --global dotnet-reportgenerator-globaltool
+      # 6️⃣ Run tests with Coverlet coverage
+      - name: Run Tests with Coverage
+        run: |
+          dotnet tool install --global coverlet.console
           export PATH="$PATH:/home/runner/.dotnet/tools"
-          reportgenerator \
-            "-reports:TestResults/**/coverage.cobertura.xml" \
-            "-targetdir:TestResults/CoverageReport" \
-            -reporttypes:Xml
+          dotnet test --no-build --configuration Release \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=cobertura \
+            /p:CoverletOutput=TestResults/CoverageReport/coverage.xml
 
-      # Verify coverage file exists
+      # 7️⃣ Verify coverage file exists
       - run: ls -R TestResults
 
-      # SonarCloud analysis
+      # 8️⃣ SonarCloud analysis
       - uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8
         with:
           args: >
