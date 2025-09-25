@@ -3,10 +3,10 @@ name: SonarCloud
 on:
   push:
     branches:
-      - main   # अगर आपकी main branch का नाम main है
+      - master   # अगर आपकी main branch का नाम main है
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   sonarcloud:
