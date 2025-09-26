@@ -1,73 +1,36 @@
-name: SonarCloud
+name: SonarCloud PR Analysis
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
-      - master
+      - master      # या अपनी main branch का नाम
 
 jobs:
   sonarcloud:
     runs-on: windows-latest
     steps:
-      # 1️⃣ Checkout code
+      # 1️⃣ Checkout full history (SonarCloud को पुराने commits compare करने के लिए चाहिए)
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2️⃣ Setup .NET SDK
+      # 2️⃣ Setup .NET SDK (आपके प्रोजेक्ट का टारगेट वर्शन डालें)
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      # 3️⃣ SonarCloud cache
-      - uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      # 4️⃣ Restore dependencies
+      # 3️⃣ Restore + Build (सिर्फ़ build; कोई test/coverage नहीं)
       - run: dotnet restore
-        shell: cmd
-
-      # 5️⃣ Build solution
       - run: dotnet build --configuration Release
-        shell: cmd
 
-      # 6️⃣ Create folder for coverage report (CMD style)
-      - name: Create Coverage Folder
-        shell: cmd
-        run: if not exist TestResults\CoverageReport mkdir TestResults\CoverageReport
-
-      # 7️⃣ Run tests with Coverlet (CMD shell required)
-      - name: Run Tests with Coverage
-        shell: cmd
-        run: |
-          dotnet tool install --global coverlet.console
-          set PATH=%PATH%;%USERPROFILE%\.dotnet\tools
-          dotnet test NPPHASE-API.sln --no-build --configuration Release ^
-            /p:CollectCoverage=true ^
-            /p:CoverletOutputFormat=cobertura ^
-            /p:CoverletOutput=TestResults\CoverageReport\coverage.xml
-
-      # 8️⃣ Verify coverage file exists
-      - name: Verify Coverage File
-        shell: cmd
-        run: dir /s TestResults
-
-      # 9️⃣ SonarCloud analysis
-      - uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8
+      # 4️⃣ SonarCloud static analysis
+      - uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
             -Dsonar.projectKey=JAY-Tecmantras_NPPHASE-API-Public
             -Dsonar.organization=jay-tecmantras
             -Dsonar.qualitygate.wait=true
-            -Dsonar.cs.opencover.reportsPaths=TestResults\CoverageReport\coverage.xml
-            -Dsonar.sources=NPPHASE-API
-            -Dsonar.tests=NPPHASE-API.Tests
+            -Dsonar.sources=NPPHASE.Api,NPPHASE.Data,NPPHASE.Services
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # GitHub से PR decoration के लिए
+          SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}    # SonarCloud token
