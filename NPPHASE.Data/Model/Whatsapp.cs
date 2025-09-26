@@ -10,7 +10,7 @@ namespace NPPHASE.Data.Model
         public int WhatsappId { get; set; }
         [MaxLength(20)]
         public string? ContactNumber { get; set; }
-        [MaxLength(500)]
+        [MaxLength(50]
         public string? ContactPersonName { get; set; }
         public IncomingOutgoingTypes? MessageType { get; set; }
         public string? Message { get; set; }
