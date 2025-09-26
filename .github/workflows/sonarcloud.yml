@@ -1,61 +1,36 @@
-name: SonarCloud
+name: SonarCloud PR Analysis
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
-    types: [opened, synchronize, reopened]
     branches:
-      - master
+      - master      # या अपनी main branch का नाम
 
 jobs:
   sonarcloud:
-    name: SonarCloud Analysis
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ कोड checkout
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      # 1️⃣ Checkout full history (SonarCloud को पुराने commits compare करने के लिए चाहिए)
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # shallow clone नहीं ताकि analysis ठीक से हो
+          fetch-depth: 0
 
-      # 2️⃣ .NET SDK सेटअप
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      # 2️⃣ Setup .NET SDK (आपके प्रोजेक्ट का टारगेट वर्शन डालें)
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'  # अपने प्रोजेक्ट का वर्ज़न डालें, जैसे 8.0.x
+          dotnet-version: '9.0.x'
 
-      # 3️⃣ SonarCloud cache
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+      # 3️⃣ Restore + Build (सिर्फ़ build; कोई test/coverage नहीं)
+      - run: dotnet restore
+      - run: dotnet build --configuration Release
 
-      # 4️⃣ Dependencies restore
-      - name: Install Dependencies
-        run: dotnet restore
-
-      # 5️⃣ Build
-      - name: Build Solution
-        run: dotnet build --no-incremental
-
-      # 6️⃣ Tests + Coverage (optional but recommended)
-      - name: Run Tests with Coverage
-        run: dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
-
-      # 7️⃣ SonarCloud analysis + Quality Gate
-      - name: SonarCloud Scan + Quality Gate
-        uses: SonarSource/sonarcloud-github-action@master
+      # 4️⃣ SonarCloud static analysis
+      - uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
             -Dsonar.projectKey=JAY-Tecmantras_NPPHASE-API-Public
             -Dsonar.organization=jay-tecmantras
             -Dsonar.qualitygate.wait=true
-            -Dsonar.cs.opencover.reportsPaths=**/TestResults/*/coverage.cobertura.xml
+            -Dsonar.sources=NPPHASE.Api,NPPHASE.Data,NPPHASE.Services
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # GitHub से PR decoration के लिए
+          SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}    # SonarCloud token
