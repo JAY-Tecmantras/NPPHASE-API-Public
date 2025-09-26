@@ -2,6 +2,7 @@
 using NPPHASE.Data.Model;
 using NPPHASE.Data.ViewModel;
 using NPPHASE.Services.IRepositories;
+using OfficeOpenXml.FormulaParsing.Excel.Functions;
 using System.ComponentModel.DataAnnotations;
 
 namespace NPPHASE.Apis.Controllers
@@ -34,6 +35,8 @@ namespace NPPHASE.Apis.Controllers
         }
         public override IActionResult Put([FromBody, Required] Location entity)
         {
+            var a = "test;";
+            var abc = a;
             ResponseMessageViewModel deviceData = GetDeviceId();
             if (deviceData.IsSuccess == false)
             {
