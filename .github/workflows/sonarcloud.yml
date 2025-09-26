@@ -7,7 +7,7 @@ on:
 
 jobs:
   sonarcloud:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       # 1️⃣ Checkout full history (SonarCloud को पुराने commits compare करने के लिए चाहिए)
       - uses: actions/checkout@v4
